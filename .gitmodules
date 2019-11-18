@@ -1,0 +1,3 @@
+[submodule "HoloGAN"]
+	path = HoloGAN
+	url = https://github.com/thunguyenphuoc/HoloGAN
