@@ -1,3 +1,4 @@
 [submodule "HoloGAN"]
 	path = HoloGAN
 	url = https://github.com/liamnaka/HoloGAN
+	branch = master
