@@ -278,7 +278,7 @@ class ViewHoloGAN(HoloGAN):
 
 
     def discriminator_IN(self, image,  cont_dim, reuse=False):
-        if str(cfg["add_D_noise"]) == "true":
+        if str(self.cfg["add_D_noise"]) == "true":
             image = image + tf.random_normal(tf.shape(image), stddev=0.02)
 
         with tf.variable_scope("discriminator") as scope:
