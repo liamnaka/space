@@ -271,11 +271,11 @@ class ViewHoloGAN(HoloGAN):
 
 
     def view_generator(self, z, reuse=False):
+        batch_size, dim = tf.shape(z)[0], tf.shape(z)[1]
         with tf.variable_scope("generator") as scope:
             if reuse:
                 scope.reuse_variables()
 
-            batch_size, dim = tf.shape(z)
             h1 = lrelu(linear(z, NUM_ANGLES * NUM_ANGLES / 64, 'g_view1_linear'))
             h1_sq = tf.reshape(h1, (batch_size, NUM_ANGLES / 8, NUM_ANGLES / 8, 1))
             h2 = lrelu(deconv2d(h1_sq, (batch_size, NUM_ANGLES / 2 , NUM_ANGLES / 2, 4), 'g_view2_deconv2d'))
