@@ -1,5 +1,8 @@
-import math
+from __future__ import division
+import os
+import sys
 import shutil
+import math
 import tensorflow as tf
 from PIL import Image
 
