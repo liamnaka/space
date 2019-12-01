@@ -72,8 +72,8 @@ class ViewHoloGAN(HoloGAN):
                       tf.reduce_mean(sigmoid_cross_entropy_with_logits(self.d_h4_r, tf.ones_like(self.d_h4_r))) \
                       + tf.reduce_mean(sigmoid_cross_entropy_with_logits(self.d_h4_f, tf.zeros_like(self.d_h4_f))))
         else:
-            self.D, self.D_logits, _ = dis_func(inputs, cont_dim=self.cfg['z_dim'], reuse=False)
-            self.D_, self.D_logits_, self.Q_c_given_x = dis_func(self.G, cont_dim=self.cfg['z_dim'], reuse=True)
+            self.D, self.D_logits, _, _ = dis_func(inputs, cont_dim=self.cfg['z_dim'], reuse=False)
+            self.D_, self.D_logits_, self.Q_c_given_x, self.Pose_c_given_x = dis_func(self.G, cont_dim=self.cfg['z_dim'], reuse=True)
 
 
         self.d_loss_real = tf.reduce_mean(sigmoid_cross_entropy_with_logits(self.D_logits, tf.ones_like(self.D)))
@@ -91,6 +91,11 @@ class ViewHoloGAN(HoloGAN):
         self.d_loss = self.d_loss + self.q_loss
         self.g_loss = self.g_loss + self.q_loss
 
+        # Pose loss
+
+        self.pose_loss = self.cfg["lambda_pose"] * tf.reduce_mean(tf.square(self.Pose_c_given_x - self.view_in[:, :2]))
+        self.d_loss = self.d_loss + self.pose_loss
+        self.g_loss = self.g_loss + self.pose_loss
 
         self.d_loss_real_sum = scalar_summary("d_loss_real", self.d_loss_real)
         self.d_loss_fake_sum = scalar_summary("d_loss_fake", self.d_loss_fake)
@@ -190,17 +195,17 @@ class ViewHoloGAN(HoloGAN):
                 _, summary_str = self.sess.run([g_optim, self.g_sum],  feed_dict=feed)
                 self.writer.add_summary(summary_str, counter)
 
-                errD_fake = self.d_loss_fake.eval(feed)
-                errD_real = self.d_loss_real.eval(feed)
-                errG = self.g_loss.eval(feed)
-                errQ = self.q_loss.eval(feed)
-
                 counter += 1
 
                 if idx % 250 == 0:
-                    print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f, q_loss: %.8f" \
+                    errD_fake = self.d_loss_fake.eval(feed)
+                    errD_real = self.d_loss_real.eval(feed)
+                    errG = self.g_loss.eval(feed)
+                    errQ = self.q_loss.eval(feed)
+                    errPose - self.pose_loss.eval(feed)
+                    print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f, q_loss: %.8f, pose_loss: %.8f" \
                         % (epoch, idx, batch_idxs,
-                           time.time() - start_time, errD_fake + errD_real, errG, errQ))
+                           time.time() - start_time, errD_fake + errD_real, errG, errQ, errPose))
 
                 if np.mod(counter, 500) == 1:
                     self.save(self.LOGDIR, counter)
@@ -271,6 +276,31 @@ class ViewHoloGAN(HoloGAN):
                 first = Image.fromarray(ren_img[0])
                 first.save(os.path.join(SAMPLE_DIR, "{0}_samples_{1}.png".format(counter, i)))
 
+
+    def discriminator_IN(self, image,  cont_dim, reuse=False):
+        if str(cfg["add_D_noise"]) == "true":
+            image = image + tf.random_normal(tf.shape(image), stddev=0.02)
+
+        with tf.variable_scope("discriminator") as scope:
+            if reuse:
+                scope.reuse_variables()
+
+            h0 = lrelu(conv2d(image, self.df_dim, name='d_h0_conv'))
+            h1 = lrelu(instance_norm(conv2d_specNorm(h0, self.df_dim * 2, name='d_h1_conv'),'d_in1'))
+            h2 = lrelu(instance_norm(conv2d_specNorm(h1, self.df_dim * 4, name='d_h2_conv'),'d_in2'))
+            h3 = lrelu(instance_norm(conv2d_specNorm(h2, self.df_dim * 8, name='d_h3_conv'),'d_in3'))
+
+            #Returning logits to determine whether the images are real or fake
+            h4 = linear(slim.flatten(h3), 1, 'd_h4_lin')
+
+            # Recognition network for latent variables has an additional layer
+            encoder = lrelu((linear(slim.flatten(h3), 128, 'd_latent')))
+            cont_vars = linear(encoder, cont_dim, "d_latent_prediction")
+
+            # Pose estimation head
+            pose_vars = tf.nn.tanh(linear(encoder, 2, "d_pose_prediction")) * tf.constant(math.pi)
+
+            return tf.nn.sigmoid(h4), h4, tf.nn.tanh(cont_vars), pose_vars
 
     def view_generator(self, z, reuse=False):
         batch_size, dim = tf.shape(z)[0], tf.shape(z)[1]
