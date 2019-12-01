@@ -1,0 +1,23 @@
+{
+  "image_path":"/content/data/CelebA/img_align_celeba/",
+  "gpu":0,
+  "batch_size":32,
+  "max_epochs":25,
+  "epoch_step":25,
+  "z_dim":128,
+  "d_eta":0.0001,
+  "g_eta":0.0001,
+  "beta1":0.5,
+  "beta2":0.999,
+  "discriminator":"discriminator_IN",
+  "generator":"generator_AdaIN",
+  "train_func":"train_ViewHoloGAN",
+  "build_func":"build_ViewHoloGAN",
+  "sample_func":"sample_ViewHoloGAN",
+  "style_disc":"false",
+  "sample_z":"uniform",
+  "add_D_noise":"false",
+  "DStyle_lambda":1.0,
+  "lambda_latent":0.0,
+  "output_dir": "/content/drive/My Drive/cs236/project/outputs/ViewHoloGAN"
+}
