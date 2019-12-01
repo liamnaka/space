@@ -36,6 +36,11 @@ class ViewHoloGAN(HoloGAN):
             output_width=output_width, gf_dim=gf_dim, df_dim=df_dim, c_dim=c_dim,
             dataset_name=dataset_name, input_fname_pattern=input_fname_pattern)
 
+        self.IMAGE_PATH = cfg['image_path']
+        self.OUTPUT_DIR = cfg['output_dir']
+        self.LOGDIR = os.path.join(OUTPUT_DIR, "log")
+
+
         self.cfg = cfg
 
 
