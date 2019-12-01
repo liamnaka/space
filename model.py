@@ -282,7 +282,7 @@ class ViewHoloGAN(HoloGAN):
             h3 = deconv2d(h2, (batch_size, NUM_ANGLES, NUM_ANGLES, 1), name='g_view3_deconv2d')
             view_dist_logits = h3
 
-            view_sample = tf.random.categorical(tf.flatten(view_dist_logits), 1)
+            view_sample = tf.random.categorical(tf.reshape(view_dist_logits, (batch_size, -1)), 1)
             elev_sample_ix = tf.cast(view_sample // NUM_ANGLES, tf.float32)
             azim_sample_ix = tf.cast(view_sample % nunm_angles, tf.float32)
             elev_sample = elev_sample_ix / NUM_ANGLES * ELEVATION_RANGE + ELEVATION_LOW
