@@ -43,8 +43,6 @@ class ViewHoloGAN(HoloGAN):
 
 
     def build_ViewHoloGAN(self):
-        self.view_manual = tf.placeholder(tf.float32, [None, 6], name='view_in')
-        self.is_manual_view = tf.placeholder(tf.bool, name='is_manual_view')
         self.inputs = tf.placeholder(tf.float32, [None, self.output_height, self.output_width, self.c_dim], name='real_images')
         self.z = tf.placeholder(tf.float32, [None, self.cfg['z_dim']], name='z')
         inputs = self.inputs
@@ -53,7 +51,7 @@ class ViewHoloGAN(HoloGAN):
         dis_func = eval("self." + (self.cfg['discriminator']))
 
         self.view_G, self.view_logits = self.view_generator(self.z)
-        self.view_in = tf.cond(self.is_manual_view, lambda: self.view_manual, lambda: self.view_G)
+        self.view_in = tf.placeholder_with_default(self.view_G, [None, 6], name='view_in')
         self.G = gen_func(self.z, self.view_in)
 
         if str.lower(str(self.cfg["style_disc"])) == "true":
@@ -180,7 +178,6 @@ class ViewHoloGAN(HoloGAN):
 
                 feed = {self.inputs: batch_images,
                       self.z: batch_z,
-                      self.is_manual_view: False,
                       self.d_lr_in: d_lr,
                       self.g_lr_in: g_lr}
                 # Update D network
@@ -207,7 +204,6 @@ class ViewHoloGAN(HoloGAN):
                     self.save(self.LOGDIR, counter)
                     feed_eval = {self.inputs: sample_images,
                                self.z: sample_z,
-                               self.is_manual_view: False,
                                self.d_lr_in: d_lr,
                                self.g_lr_in: g_lr}
                     samples, d_loss, g_loss = self.sess.run(
@@ -254,17 +250,14 @@ class ViewHoloGAN(HoloGAN):
                 sample_view = np.tile(
                     np.array([i * math.pi / 180.0, 0 * math.pi / 180.0, 1.0, 0, 0, 0]), (self.cfg['batch_size'], 1))
                 feed_eval = {self.z: sample_z,
-                            self.is_manual_view: True,
-                            self.view_manual: sample_view}
+                            self.view_in: sample_view}
             elif config.rotate_azimuth:
                 sample_view = np.tile(
                     np.array([270 * math.pi / 180.0, (90 - i) * math.pi / 180.0, 1.0, 0, 0, 0]), (self.cfg['batch_size'], 1))
                 feed_eval = {self.z: sample_z,
-                            self.is_manual_view: True,
-                            self.view_manual: sample_view}
+                            self.view_in: sample_view}
             else:
-                feed_eval = {self.z: sample_z,
-                            self.is_manual_view: False}
+                feed_eval = {self.z: sample_z}
 
             samples = self.sess.run(self.G, feed_dict=feed_eval)
             ren_img = inverse_transform(samples)
