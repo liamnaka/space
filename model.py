@@ -276,10 +276,10 @@ class ViewHoloGAN(HoloGAN):
             if reuse:
                 scope.reuse_variables()
 
-            h1 = lrelu(linear(z, NUM_ANGLES * NUM_ANGLES // 64, 'g_view1_linear'))
+            h1 = lrelu(linear(z, NUM_ANGLES * NUM_ANGLES // 64, scope='g_view1_linear'))
             h1_sq = tf.reshape(h1, (batch_size, NUM_ANGLES // 8, NUM_ANGLES // 8, 1))
-            h2 = lrelu(deconv2d(h1_sq, (batch_size, NUM_ANGLES // 2 , NUM_ANGLES // 2, 4), 'g_view2_deconv2d'))
-            h3 = deconv2d(h2, (batch_size, NUM_ANGLES, NUM_ANGLES, 1), 'g_view3_deconv2d')
+            h2 = lrelu(deconv2d(h1_sq, (batch_size, NUM_ANGLES // 2 , NUM_ANGLES // 2, 4), name='g_view2_deconv2d'))
+            h3 = deconv2d(h2, (batch_size, NUM_ANGLES, NUM_ANGLES, 1), name='g_view3_deconv2d')
             view_dist_logits = h3
 
             view_sample = tf.random.categorical(tf.flatten(view_dist_logits), 1)
