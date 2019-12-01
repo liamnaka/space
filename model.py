@@ -1,8 +1,11 @@
-import tensorflow as tf
 import math
+import shutil
+import tensorflow as tf
+from PIL import Image
+
 from HoloGAN.tools.ops import *
 from HoloGAN.model_HoloGAN import HoloGAN
-from PIL import Image
+
 
 AZIMUTH_LOW = -math.pi
 AZIMUTH_HIGH = math.pi
