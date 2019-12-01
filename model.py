@@ -284,7 +284,7 @@ class ViewHoloGAN(HoloGAN):
 
             view_sample = tf.random.categorical(tf.reshape(view_dist_logits, (batch_size, -1)), 1)
             elev_sample_ix = tf.cast(view_sample // NUM_ANGLES, tf.float32)
-            azim_sample_ix = tf.cast(view_sample % nunm_angles, tf.float32)
+            azim_sample_ix = tf.cast(view_sample % NUM_ANGLES, tf.float32)
             elev_sample = elev_sample_ix / NUM_ANGLES * ELEVATION_RANGE + ELEVATION_LOW
             azim_sample = azim_sample_ix / NUM_ANGLES * AZIMUTH_RANGE + AZIMUTH_LOW
 
