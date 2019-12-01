@@ -44,7 +44,7 @@ class ViewHoloGAN(HoloGAN):
         dis_func = eval("self." + (self.cfg['discriminator']))
 
         self.view_G, self.view_logits = self.view_generator(self.z)
-        self.view_in = tf.cond(self.is_manual_view, self.view_manual, self.view_G)
+        self.view_in = tf.cond(self.is_manual_view, lambda: self.view_manual, lambda: self.view_G)
         self.G = gen_func(self.z, self.view_in)
 
         if str.lower(str(self.cfg["style_disc"])) == "true":
