@@ -288,9 +288,7 @@ class ViewHoloGAN(HoloGAN):
             elev_sample = elev_sample_ix / NUM_ANGLES * ELEVATION_RANGE + ELEVATION_LOW
             azim_sample = azim_sample_ix / NUM_ANGLES * AZIMUTH_RANGE + AZIMUTH_LOW
 
-            param_sample = tf.zeros((batch_size, 6), dtype=tf.float32)
-            param_sample[:, 0] += elev_sample
-            param_sample[:, 1] += azim_sample
+            param_sample = tf.concat((azim_sample, elev_sample, tf.ones((batch_size, 1)), tf.zeros((batch_size, 3))), axis=1)
 
             return param_sample, view_dist_logits
 
