@@ -196,9 +196,11 @@ class ViewHoloGAN(HoloGAN):
                 errQ = self.q_loss.eval(feed)
 
                 counter += 1
-                print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f, q_loss: %.8f" \
-                    % (epoch, idx, batch_idxs,
-                       time.time() - start_time, errD_fake + errD_real, errG, errQ))
+
+                if idx % 250 == 0:
+                    print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f, q_loss: %.8f" \
+                        % (epoch, idx, batch_idxs,
+                           time.time() - start_time, errD_fake + errD_real, errG, errQ))
 
                 if np.mod(counter, 500) == 1:
                     self.save(self.LOGDIR, counter)
@@ -220,7 +222,7 @@ class ViewHoloGAN(HoloGAN):
                         first.save(os.path.join(self.OUTPUT_DIR, "{0}_GAN.png".format(counter)))
                         print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss))
 
-    def sample_HoloGAN(self, config):
+    def sample_ViewHoloGAN(self, config):
         could_load, checkpoint_counter = self.load(self.checkpoint_dir)
         if could_load:
             counter = checkpoint_counter
