@@ -298,7 +298,8 @@ class ViewHoloGAN(HoloGAN):
             cont_vars = linear(encoder, cont_dim, "d_latent_prediction")
 
             # Pose estimation head
-            pose_vars = tf.nn.tanh(linear(encoder, 2, "d_pose_prediction")) * tf.constant(math.pi)
+            pose_encoder = lrelu((linear(slim.flatten(h3), 128, 'd_pose')))
+            pose_vars = tf.nn.tanh(linear(pose_encoder, 2, "d_pose_prediction")) * tf.constant(math.pi)
 
             return tf.nn.sigmoid(h4), h4, tf.nn.tanh(cont_vars), pose_vars
 
