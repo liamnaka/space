@@ -1,6 +1,6 @@
 import tensorflow as tf
 import math
-from HoloGAN.tools.ops import linear, lrelu, deconv2d
+from HoloGAN.tools.ops import *
 from HoloGAN.model_HoloGAN import HoloGAN
 from PIL import Image
 
