@@ -38,9 +38,7 @@ class ViewHoloGAN(HoloGAN):
 
         self.IMAGE_PATH = cfg['image_path']
         self.OUTPUT_DIR = cfg['output_dir']
-        self.LOGDIR = os.path.join(OUTPUT_DIR, "log")
-
-
+        self.LOGDIR = os.path.join(self.OUTPUT_DIR, "log")
         self.cfg = cfg
 
 
@@ -118,10 +116,10 @@ class ViewHoloGAN(HoloGAN):
 
         tf.global_variables_initializer().run()
 
-        shutil.copyfile(sys.argv[1], os.path.join(LOGDIR, 'config.json'))
+        shutil.copyfile(sys.argv[1], os.path.join(self.LOGDIR, 'config.json'))
         self.g_sum = merge_summary([self.d_loss_fake_sum, self.g_loss_sum])
         self.d_sum = merge_summary([self.d_loss_real_sum, self.d_loss_sum])
-        self.writer = SummaryWriter(LOGDIR, self.sess.graph)
+        self.writer = SummaryWriter(self.LOGDIR, self.sess.graph)
 
         # Sample noise Z and view parameters to test during training
         sample_z = self.sampling_Z(self.cfg['z_dim'], str(self.cfg['sample_z']))
@@ -151,7 +149,7 @@ class ViewHoloGAN(HoloGAN):
         else:
             print(" [!] Load failed...")
 
-        self.data = glob.glob(os.path.join(IMAGE_PATH, self.input_fname_pattern))
+        self.data = glob.glob(os.path.join(self.IMAGE_PATH, self.input_fname_pattern))
         d_lr = self.cfg['d_eta']
         g_lr = self.cfg['g_eta']
         for epoch in range(self.cfg['max_epochs']):
@@ -206,7 +204,7 @@ class ViewHoloGAN(HoloGAN):
                        time.time() - start_time, errD_fake + errD_real, errG, errQ))
 
                 if np.mod(counter, 500) == 1:
-                    self.save(LOGDIR, counter)
+                    self.save(self.LOGDIR, counter)
                     feed_eval = {self.inputs: sample_images,
                                self.z: sample_z,
                                self.is_manual_view: False,
@@ -219,11 +217,11 @@ class ViewHoloGAN(HoloGAN):
                     ren_img = np.clip(255 * ren_img, 0, 255).astype(np.uint8)
                     try:
                         tiled = Image.fromarray(merge(ren_img, [self.cfg['batch_size'] // 4, 4]))
-                        tiled.save(os.path.join(OUTPUT_DIR, "{0}_GAN.png".format(counter)))
+                        tiled.save(os.path.join(self.OUTPUT_DIR, "{0}_GAN.png".format(counter)))
                         print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss))
                     except:
                         first = Image.fromarray(ren_img[0])
-                        first.save(os.path.join(OUTPUT_DIR, "{0}_GAN.png".format(counter)))
+                        first.save(os.path.join(self.OUTPUT_DIR, "{0}_GAN.png".format(counter)))
                         print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss))
 
     def sample_HoloGAN(self, config):
@@ -234,7 +232,7 @@ class ViewHoloGAN(HoloGAN):
         else:
             print(" [!] Load failed...")
             return
-        SAMPLE_DIR = os.path.join(OUTPUT_DIR, "samples")
+        SAMPLE_DIR = os.path.join(self.OUTPUT_DIR, "samples")
         if not os.path.exists(SAMPLE_DIR):
             os.makedirs(SAMPLE_DIR)
         sample_z = self.sampling_Z(self.cfg['z_dim'], str(self.cfg['sample_z']))
