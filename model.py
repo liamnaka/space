@@ -270,13 +270,11 @@ class ViewHoloGAN(HoloGAN):
             ren_img = inverse_transform(samples)
             ren_img = np.clip(255 * ren_img, 0, 255).astype(np.uint8)
             try:
-                scipy.misc.imsave(
-                  os.path.join(SAMPLE_DIR, "{0}_samples_{1}.png".format(counter, i)),
-                  merge(ren_img, [self.cfg['batch_size'] // 4, 4]))
+                tiled = Image.fromarray(merge(ren_img, [self.cfg['batch_size'] // 4, 4]))
+                tiled.save(os.path.join(SAMPLE_DIR, "{0}_samples_{1}.png".format(counter, i)))
             except:
-                scipy.misc.imsave(
-                  os.path.join(SAMPLE_DIR, "{0}_samples_{1}.png".format(counter, i)),
-                  ren_img[0])
+                first = Image.fromarray(ren_img[0])
+                first.save(os.path.join(SAMPLE_DIR, "{0}_samples_{1}.png".format(counter, i)))
 
 
     def view_generator(self, z, reuse=False):
