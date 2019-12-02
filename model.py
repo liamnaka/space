@@ -265,7 +265,7 @@ class ViewHoloGAN(HoloGAN):
             else:
                 feed_eval = {self.z: sample_z}
 
-            if i == low and cfg.plot_pose_dsitribution:
+            if i == low and config.plot_pose_distribution:
                 pose_prob_grid = tf.reshape(tf.nn.softmax(self.view_logits[0]), (self.NUM_ANGLES, self.NUM_ANGLES))
                 samples, pose_dist_sample = self.sess.run([self.G, pose_prob_grid], feed_dict=feed_eval)
                 # normalize values
