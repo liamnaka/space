@@ -50,7 +50,7 @@ def plot_heatmap_on_sphere(heatmap, save_filename):
     ax.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
     ax.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
 
-    plt.colorbar(m)
+    plt.colorbar(sm)
 
     # Save the plot.
     plt.savefig(save_filename, bbox_inches='tight')
