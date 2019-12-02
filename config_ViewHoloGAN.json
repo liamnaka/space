@@ -20,6 +20,6 @@
   "add_D_noise":"false",
   "DStyle_lambda":1.0,
   "lambda_latent":1.0,
-  "lambda_pose":20.0,
+  "lambda_pose":10.0,
   "output_dir": "/content/drive/My Drive/cs236/project_outputs/ViewHoloGAN"
 }

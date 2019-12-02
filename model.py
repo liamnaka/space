@@ -10,8 +10,8 @@ from HoloGAN.tools.ops import *
 from HoloGAN.model_HoloGAN import HoloGAN
 from utils import plot_heatmap_on_sphere
 
-AZIMUTH_LOW = -math.pi
-AZIMUTH_HIGH = math.pi
+AZIMUTH_LOW = -math.pi / 2
+AZIMUTH_HIGH = math.pi / 2
 AZIMUTH_RANGE = AZIMUTH_HIGH - AZIMUTH_LOW
 
 ELEVATION_LOW = -math.pi / 2
@@ -322,13 +322,19 @@ class ViewHoloGAN(HoloGAN):
             if reuse:
                 scope.reuse_variables()
 
-            h1 = lrelu(linear(z, self.NUM_ANGLES * self.NUM_ANGLES // 64, scope='g_view1_linear'))
-            h1_sq = tf.reshape(h1, (batch_size, self.NUM_ANGLES // 8, self.NUM_ANGLES // 8, 1))
-            h2 = lrelu(instance_norm(deconv2d(h1_sq, (batch_size, self.NUM_ANGLES // 2 , self.NUM_ANGLES // 2, 4), d_h=4, d_w=4, name='g_view2_deconv2d')))
-            h3 = deconv2d(h2, (batch_size, self.NUM_ANGLES, self.NUM_ANGLES, 1), k_h=3, k_w=3, name='g_view3_deconv2d')
+            # h1 = lrelu(linear(z, self.NUM_ANGLES * self.NUM_ANGLES // 64, scope='g_view1_linear'))
+            # h1_sq = tf.reshape(h1, (batch_size, self.NUM_ANGLES // 8, self.NUM_ANGLES // 8, 1))
+            # h2 = lrelu(instance_norm(deconv2d(h1_sq, (batch_size, self.NUM_ANGLES // 2 , self.NUM_ANGLES // 2, 4), d_h=4, d_w=4, name='g_view2_deconv2d')))
+            # h3 = lrelu(instance_norm(deconv2d(h2, (batch_size, self.NUM_ANGLES, self.NUM_ANGLES, 1), k_h=3, k_w=3, name='g_view3_deconv2d')))
+            # h3_flat = tf.reshape(h3, (batch_size, self.NUM_ANGLES ** 2))
+            # h4 = linear(h3_flat, self.NUM_ANGLES ** 2, scope='g_view4_linear')
+
+            h1 = lrelu(linear(z, self.NUM_ANGLES ** 2 // 32, scope='g_view1_linear'))
+            h2 = lrelu(linear(z, self.NUM_ANGLES ** 2 // 16, scope='g_view2_linear'))
+            h3 = linear(h3_flat, self.NUM_ANGLES ** 2, scope='g_view3_linear')
             view_dist_logits = h3
 
-            view_sample = tf.random.categorical(tf.reshape(view_dist_logits, (batch_size, -1)), 1)
+            view_sample = tf.random.categorical(view_dist_logits, 1)
             elev_sample_ix = tf.cast(view_sample // self.NUM_ANGLES, tf.float32)
             azim_sample_ix = tf.cast(view_sample % self.NUM_ANGLES, tf.float32)
             elev_sample = elev_sample_ix / self.NUM_ANGLES * ELEVATION_RANGE + ELEVATION_LOW
