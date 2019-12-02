@@ -329,8 +329,8 @@ class ViewHoloGAN(HoloGAN):
             # h3_flat = tf.reshape(h3, (batch_size, self.NUM_ANGLES ** 2))
             # h4 = linear(h3_flat, self.NUM_ANGLES ** 2, scope='g_view4_linear')
 
-            h1 = lrelu(linear(z, dim // 2, scope='g_view1_linear'))
-            h2 = lrelu(linear(h1, dim // 4, scope='g_view2_linear'))
+            h1 = lrelu(linear(z, self.cfg['z_dim'] // 2, scope='g_view1_linear'))
+            h2 = lrelu(linear(h1, self.cfg['z_dim'] // 4, scope='g_view2_linear'))
             h3 = linear(h2, self.NUM_ANGLES ** 2, scope='g_view3_linear')
             view_dist_logits = h3
 
