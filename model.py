@@ -18,11 +18,6 @@ ELEVATION_LOW = -math.pi / 2
 ELEVATION_HIGH = math.pi / 2
 ELEVATION_RANGE = ELEVATION_HIGH - ELEVATION_LOW
 
-# Number of discrete angles to model within both elevation and azimuth ranges
-# The view distribution logits are a NUM_ANGLES x NUM_ANGLES matrix, with
-# the row index -> elevation value, column index -> azimuth value.
-NUM_ANGLES = 120
-
 
 class ViewHoloGAN(HoloGAN):
     def __init__(self, cfg, sess, input_height=108, input_width=108, crop=True,
@@ -38,6 +33,10 @@ class ViewHoloGAN(HoloGAN):
 
         self.IMAGE_PATH = cfg['image_path']
         self.OUTPUT_DIR = cfg['output_dir']
+        # Number of discrete angles to model within both elevation and azimuth ranges
+        # The view distribution logits are a NUM_ANGLES x NUM_ANGLES matrix, with
+        # the row index -> elevation value, column index -> azimuth value.
+        self.NUM_ANGLES = cfg['num_angles']
         self.LOGDIR = os.path.join(self.OUTPUT_DIR, "log")
         self.cfg = cfg
 
@@ -266,7 +265,18 @@ class ViewHoloGAN(HoloGAN):
             else:
                 feed_eval = {self.z: sample_z}
 
-            samples = self.sess.run(self.G, feed_dict=feed_eval)
+            if i == low and cfg.graph_pose_dsitribution:
+                pose_prob_grid = tf.reshape(tf.nn.softmax(self.view_logits[0]), (self.NUM_ANGLES, self.NUM_ANGLES))
+                samples, pose_dist_sample = self.sess.run([self.G, pose_prob_grid], feed_dict=feed_eval)
+                # normalize values
+                min = np.min(pose_dist_sample)
+                max = np.max(pose_dist_sample)
+                if max != min:
+                    pose_dist_sample = (pose_dist_sample - min) * (255.0 / (max - min))
+                pose_dist_img = Image.fromarray((pose_dist_sample).astype('uint8'),'L')
+                pose_dist_img.save(os.path.join(SAMPLE_DIR, "{0}_sample_pose_distribution.png".format(counter)))
+            else:
+                samples = self.sess.run(self.G, feed_dict=feed_eval)
             ren_img = inverse_transform(samples)
             ren_img = np.clip(255 * ren_img, 0, 255).astype(np.uint8)
             try:
@@ -275,6 +285,8 @@ class ViewHoloGAN(HoloGAN):
             except:
                 first = Image.fromarray(ren_img[0])
                 first.save(os.path.join(SAMPLE_DIR, "{0}_samples_{1}.png".format(counter, i)))
+
+
 
 
     def discriminator_IN(self, image,  cont_dim, reuse=False):
@@ -309,17 +321,17 @@ class ViewHoloGAN(HoloGAN):
             if reuse:
                 scope.reuse_variables()
 
-            h1 = lrelu(linear(z, NUM_ANGLES * NUM_ANGLES // 64, scope='g_view1_linear'))
-            h1_sq = tf.reshape(h1, (batch_size, NUM_ANGLES // 8, NUM_ANGLES // 8, 1))
-            h2 = lrelu(deconv2d(h1_sq, (batch_size, NUM_ANGLES // 2 , NUM_ANGLES // 2, 4), d_h=4, d_w=4, name='g_view2_deconv2d'))
-            h3 = deconv2d(h2, (batch_size, NUM_ANGLES, NUM_ANGLES, 1), k_h=3, k_w=3, name='g_view3_deconv2d')
+            h1 = lrelu(linear(z, self.NUM_ANGLES * self.NUM_ANGLES // 64, scope='g_view1_linear'))
+            h1_sq = tf.reshape(h1, (batch_size, self.NUM_ANGLES // 8, self.NUM_ANGLES // 8, 1))
+            h2 = lrelu(instance_norm(deconv2d(h1_sq, (batch_size, self.NUM_ANGLES // 2 , self.NUM_ANGLES // 2, 4), d_h=4, d_w=4, name='g_view2_deconv2d')))
+            h3 = deconv2d(h2, (batch_size, self.NUM_ANGLES, self.NUM_ANGLES, 1), k_h=3, k_w=3, name='g_view3_deconv2d')
             view_dist_logits = h3
 
             view_sample = tf.random.categorical(tf.reshape(view_dist_logits, (batch_size, -1)), 1)
-            elev_sample_ix = tf.cast(view_sample // NUM_ANGLES, tf.float32)
-            azim_sample_ix = tf.cast(view_sample % NUM_ANGLES, tf.float32)
-            elev_sample = elev_sample_ix / NUM_ANGLES * ELEVATION_RANGE + ELEVATION_LOW
-            azim_sample = azim_sample_ix / NUM_ANGLES * AZIMUTH_RANGE + AZIMUTH_LOW
+            elev_sample_ix = tf.cast(view_sample // self.NUM_ANGLES, tf.float32)
+            azim_sample_ix = tf.cast(view_sample % self.NUM_ANGLES, tf.float32)
+            elev_sample = elev_sample_ix / self.NUM_ANGLES * ELEVATION_RANGE + ELEVATION_LOW
+            azim_sample = azim_sample_ix / self.NUM_ANGLES * AZIMUTH_RANGE + AZIMUTH_LOW
 
             param_sample = tf.concat((azim_sample, elev_sample, tf.ones((batch_size, 1)), tf.zeros((batch_size, 3))), axis=1)
 
