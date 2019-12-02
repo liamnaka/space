@@ -21,5 +21,6 @@
   "DStyle_lambda":1.0,
   "lambda_latent":1.0,
   "lambda_pose":20.0,
+  "plot_pose_dsitribution": true,
   "output_dir": "/content/drive/My Drive/cs236/project_outputs/ViewHoloGAN"
 }

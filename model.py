@@ -8,7 +8,7 @@ from PIL import Image
 
 from HoloGAN.tools.ops import *
 from HoloGAN.model_HoloGAN import HoloGAN
-
+from utils import plot_heatmap_on_sphere
 
 AZIMUTH_LOW = -math.pi
 AZIMUTH_HIGH = math.pi
@@ -265,7 +265,7 @@ class ViewHoloGAN(HoloGAN):
             else:
                 feed_eval = {self.z: sample_z}
 
-            if i == low and cfg.graph_pose_dsitribution:
+            if i == low and cfg.plot_pose_dsitribution:
                 pose_prob_grid = tf.reshape(tf.nn.softmax(self.view_logits[0]), (self.NUM_ANGLES, self.NUM_ANGLES))
                 samples, pose_dist_sample = self.sess.run([self.G, pose_prob_grid], feed_dict=feed_eval)
                 # normalize values
@@ -275,6 +275,7 @@ class ViewHoloGAN(HoloGAN):
                     pose_dist_sample = (pose_dist_sample - min) * (255.0 / (max - min))
                 pose_dist_img = Image.fromarray((pose_dist_sample).astype('uint8'),'L')
                 pose_dist_img.save(os.path.join(SAMPLE_DIR, "{0}_sample_pose_distribution.png".format(counter)))
+                plot_heatmap_on_sphere(pose_dist_sample, "{0}_sample_pose_distribution_sphere.png".format(counter))
             else:
                 samples = self.sess.run(self.G, feed_dict=feed_eval)
             ren_img = inverse_transform(samples)
