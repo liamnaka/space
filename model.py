@@ -330,8 +330,8 @@ class ViewHoloGAN(HoloGAN):
             # h4 = linear(h3_flat, self.NUM_ANGLES ** 2, scope='g_view4_linear')
 
             h1 = lrelu(linear(z, self.NUM_ANGLES ** 2 // 32, scope='g_view1_linear'))
-            h2 = lrelu(linear(z, self.NUM_ANGLES ** 2 // 16, scope='g_view2_linear'))
-            h3 = linear(h3_flat, self.NUM_ANGLES ** 2, scope='g_view3_linear')
+            h2 = lrelu(linear(h1, self.NUM_ANGLES ** 2 // 16, scope='g_view2_linear'))
+            h3 = linear(h2, self.NUM_ANGLES ** 2, scope='g_view3_linear')
             view_dist_logits = h3
 
             view_sample = tf.random.categorical(view_dist_logits, 1)
